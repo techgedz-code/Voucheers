@@ -71,9 +71,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No prizes configured." }, { status: 409 });
   }
 
-  // --- Availability: zero out exhausted segments (stock + daily caps) ---
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
+
+  // --- One play per phone per outlet per day (anti-spam) ---
+  const { count: playsToday } = await supabase
+    .from("entries")
+    .select("id", { count: "exact", head: true })
+    .eq("outlet_id", outlet.id)
+    .eq("phone", phone)
+    .gte("created_at", startOfDay.toISOString());
+  if ((playsToday ?? 0) > 0) {
+    return NextResponse.json(
+      { error: "You've already played today. Come back on your next visit!" },
+      { status: 429 }
+    );
+  }
+
+  // --- Availability: zero out exhausted segments (stock + daily caps) ---
 
   const effective = await Promise.all(
     vtypes.map(async (vt) => {

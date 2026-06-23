@@ -6,7 +6,7 @@ import { appUrl } from "@/lib/constants";
 import { qrPngDataUrl } from "@/lib/qr";
 import type { Campaign, Outlet, VoucherType } from "@/lib/types";
 import { VoucherWheelEditor } from "./VoucherWheelEditor";
-import { saveCampaignSettings } from "./actions";
+import { saveCampaignSettings, updateOutletBranding } from "./actions";
 
 export default async function OutletDetail({
   params,
@@ -120,6 +120,45 @@ export default async function OutletDetail({
             <button className="btn-primary">Save settings</button>
           </form>
         </div>
+      </div>
+
+      {/* Branding & details */}
+      <div className="card">
+        <h2 className="mb-3 font-semibold">Branding & details</h2>
+        <form action={updateOutletBranding} className="grid gap-4 sm:grid-cols-2">
+          <input type="hidden" name="outlet_id" value={o.id} />
+          <div>
+            <label className="label" htmlFor="name">Outlet name</label>
+            <input id="name" name="name" defaultValue={o.name} className="input" />
+          </div>
+          <div>
+            <label className="label" htmlFor="address">Address</label>
+            <input id="address" name="address" defaultValue={o.address ?? ""} className="input" />
+          </div>
+          <div>
+            <label className="label" htmlFor="google_place_id">Google Place ID</label>
+            <input id="google_place_id" name="google_place_id" defaultValue={o.google_place_id ?? ""} className="input" placeholder="ChIJ..." />
+          </div>
+          <div>
+            <label className="label" htmlFor="review_url">Review URL (optional override)</label>
+            <input id="review_url" name="review_url" defaultValue={o.review_url ?? ""} className="input" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="label" htmlFor="logo_url">Logo image URL</label>
+            <input id="logo_url" name="logo_url" defaultValue={o.logo_url ?? ""} className="input" placeholder="https://.../logo.png (square PNG works best)" />
+            <p className="mt-1 text-xs text-gray-500">
+              Used as the customer&apos;s home-screen wallet icon and on emails.
+              Paste a public square image URL.
+            </p>
+          </div>
+          <div>
+            <label className="label" htmlFor="brand_color">Brand color</label>
+            <input id="brand_color" name="brand_color" type="color" defaultValue={o.brand_color ?? "#e11d48"} className="h-10 w-20 rounded border border-gray-300" />
+          </div>
+          <div className="flex items-end">
+            <button className="btn-primary">Save details</button>
+          </div>
+        </form>
       </div>
 
       {/* Wheel / voucher editor */}

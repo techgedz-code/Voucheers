@@ -63,5 +63,12 @@ export async function resolveFlag(formData: FormData) {
   const supabase = await createClient();
   const id = String(formData.get("id"));
   await supabase.from("abuse_flags").update({ resolved: true }).eq("id", id);
-  revalidatePath("/admin");
+  revalidatePath("/admin/abuse");
+}
+
+export async function runAbuseScan() {
+  await requireAuth(["super_admin"]);
+  const supabase = await createClient();
+  await supabase.rpc("detect_abuse");
+  revalidatePath("/admin/abuse");
 }

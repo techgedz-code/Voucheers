@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { resolveFlag } from "../actions";
+import { resolveFlag, runAbuseScan } from "../actions";
 
 interface FlagRow {
   id: string;
@@ -25,11 +25,16 @@ export default async function AbusePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Abuse flags</h1>
-        <p className="text-sm text-gray-500">
-          Silent IP/geolocation anomalies for possible cross-outlet QR reuse.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Abuse flags</h1>
+          <p className="text-sm text-gray-500">
+            Silent IP/geolocation anomalies for possible cross-outlet QR reuse.
+          </p>
+        </div>
+        <form action={runAbuseScan}>
+          <button className="btn-outline !py-1.5">Run scan now</button>
+        </form>
       </div>
 
       <div className="space-y-3">

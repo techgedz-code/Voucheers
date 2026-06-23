@@ -4,6 +4,36 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 import type { RewardType } from "@/lib/types";
+import { googleReviewUrl } from "@/lib/constants";
+
+export async function updateOutletBranding(formData: FormData) {
+  await requireAuth(["merchant"]);
+  const supabase = await createClient();
+
+  const id = String(formData.get("outlet_id"));
+  const name = String(formData.get("name") || "").trim();
+  const address = String(formData.get("address") || "").trim();
+  const placeId = String(formData.get("google_place_id") || "").trim();
+  const reviewInput = String(formData.get("review_url") || "").trim();
+  const logoUrl = String(formData.get("logo_url") || "").trim();
+  const brandColor = String(formData.get("brand_color") || "#e11d48").trim();
+
+  const review_url = reviewInput || (placeId ? googleReviewUrl(placeId) : null);
+
+  await supabase
+    .from("outlets")
+    .update({
+      name: name || undefined,
+      address: address || null,
+      google_place_id: placeId || null,
+      review_url,
+      logo_url: logoUrl || null,
+      brand_color: brandColor,
+    })
+    .eq("id", id);
+
+  revalidatePath(`/dashboard/outlets/${id}`);
+}
 
 /** Editable shape sent from the wheel editor (subset of VoucherType). */
 export interface SegmentInput {
