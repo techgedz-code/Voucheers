@@ -73,6 +73,7 @@ export interface VoucherType {
   daily_limit: number | null; // null = unlimited per day
   issued_count: number;
   sort_order: number;
+  is_active: boolean;
 }
 
 export interface Entry {

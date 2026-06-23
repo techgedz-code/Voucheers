@@ -22,7 +22,7 @@ export default async function DashboardLayout({
       />
 
       {status !== "active" && (
-        <div className="bg-amber-50 px-5 py-2.5 text-center text-sm text-amber-800">
+        <div className="bg-amber-50 px-5 py-2.5 text-center text-sm text-amber-800 print:hidden">
           Your subscription is <strong>{status}</strong>. Some features are
           locked until a super admin activates your account.
         </div>
