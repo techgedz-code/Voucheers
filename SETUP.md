@@ -20,8 +20,11 @@ A step-by-step guide to run the platform locally. No prior coding needed — jus
 ### Run the database schema
 
 1. In Supabase, open **SQL Editor** → **New query**.
-2. Open the file [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) in this project, copy **all** of it, paste into the editor, and click **Run**.
-3. You should see "Success". This creates all tables, security rules, and triggers.
+2. Run **each** file in [`supabase/migrations/`](supabase/migrations) **in order**, one at a time:
+   `0001_init.sql`, then `0002_voucher_active.sql`, then `0003_functions.sql`.
+   For each: open the file, copy all of it, paste into the editor, click **Run**.
+3. You should see "Success" each time. These create all tables, security rules,
+   triggers, and the draw/redemption functions.
 
 ### (Recommended for testing) Turn off email confirmation
 
