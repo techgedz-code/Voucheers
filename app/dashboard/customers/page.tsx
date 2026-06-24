@@ -1,7 +1,6 @@
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerDatabase, type AggregatedCustomer } from "./CustomerDatabase";
-import { CustomerSearch } from "./CustomerSearch";
 
 export default async function CustomersPage() {
   await requireAuth(["merchant", "staff"]);
@@ -92,19 +91,12 @@ export default async function CustomersPage() {
       <div>
         <h1 className="text-2xl font-bold">Customers</h1>
         <p className="mt-1 text-sm text-gray-500">
-          {customers.length} unique customer{customers.length !== 1 ? "s" : ""} across all outlets
+          {customers.length} unique customer{customers.length !== 1 ? "s" : ""} across all outlets.
+          To look up and redeem vouchers, use the <strong>Redeem</strong> page.
         </p>
       </div>
 
       <CustomerDatabase customers={customers} outlets={outlets} />
-
-      <div>
-        <h2 className="mb-1 text-lg font-semibold">Lookup & Redeem</h2>
-        <p className="mb-4 text-sm text-gray-500">
-          Search by phone to view a customer&apos;s vouchers and redeem on their behalf.
-        </p>
-        <CustomerSearch />
-      </div>
     </div>
   );
 }
