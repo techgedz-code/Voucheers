@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SpinWheel, type WheelSeg } from "@/components/SpinWheel";
 
@@ -53,6 +53,90 @@ export function CustomerFlow({
 
   const n = segments.length;
   const slice = 360 / n;
+
+  // Persist progress so leaving for Google/Instagram and coming back never
+  // loses the customer's place or details (mobile-critical).
+  const STORAGE_KEY = `vflow:${qrToken}`;
+  const restoredRef = useRef(false);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw) as Partial<{
+          step: Step;
+          phone: string;
+          email: string;
+          consent: boolean;
+          reviewClicked: boolean;
+          instaClicked: boolean;
+        }>;
+        if (s.phone) setPhone(s.phone);
+        if (s.email) setEmail(s.email);
+        if (typeof s.consent === "boolean") setConsent(s.consent);
+        if (s.reviewClicked) setReviewClicked(true);
+        if (s.instaClicked) setInstaClicked(true);
+        if (s.step && ["form", "review", "instagram", "game"].includes(s.step)) {
+          setStep(s.step);
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    restoredRef.current = true;
+  }, [STORAGE_KEY]);
+
+  useEffect(() => {
+    if (!restoredRef.current || step === "result") return;
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ step, phone, email, consent, reviewClicked, instaClicked })
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [STORAGE_KEY, step, phone, email, consent, reviewClicked, instaClicked]);
+
+  // Save synchronously right before navigating away to an external site,
+  // overriding the fields we're about to change.
+  function persistNow(extra: Record<string, unknown>) {
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          step,
+          phone,
+          email,
+          consent,
+          reviewClicked,
+          instaClicked,
+          ...extra,
+        })
+      );
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // Tap "Review": advance our flow first, then go to Google in the same tab.
+  // When they return (any way), they're already on the next step.
+  function goReview() {
+    if (!reviewUrl) return;
+    const next: Step = instagramHandle ? "instagram" : "game";
+    setReviewClicked(true);
+    setStep(next);
+    persistNow({ reviewClicked: true, step: next });
+    window.location.href = reviewUrl;
+  }
+
+  function goInstagram() {
+    setInstaClicked(true);
+    setStep("game");
+    persistNow({ instaClicked: true, step: "game" });
+    const handle = (instagramHandle ?? "").replace(/^@/, "");
+    window.location.href = `https://instagram.com/${handle}`;
+  }
 
   function submitForm(e: React.FormEvent) {
     e.preventDefault();
@@ -115,6 +199,11 @@ export function CustomerFlow({
   function onSpinEnd() {
     setSpinning(false);
     setStep("result");
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
   }
 
   const accent = { background: brandColor } as const;
@@ -205,24 +294,26 @@ export function CustomerFlow({
             <div className="card text-center">
               <h1 className="text-xl font-extrabold">Love your visit? ⭐</h1>
               <p className="mt-1 text-sm text-gray-600">
-                A quick Google review really helps {outletName}. It only takes a
-                moment — then come back to spin!
+                A quick Google review really helps {outletName} — it only takes a
+                moment.
               </p>
-              <a
-                href={reviewUrl ?? "#"}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => setReviewClicked(true)}
+              <button
+                onClick={goReview}
                 className="btn mt-4 w-full text-white"
                 style={accent}
               >
                 ⭐ Leave a Google review
-              </a>
+              </button>
+              <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                After you post your review, <strong>return to this page</strong>{" "}
+                (swipe back or reopen your browser) — you&apos;ll be ready for the
+                next step automatically.
+              </p>
               <button
                 onClick={() => setStep(instagramHandle ? "instagram" : "game")}
                 className="mt-3 w-full text-sm font-medium text-gray-500"
               >
-                {reviewClicked ? "I've left my review — continue" : "Skip & continue"}
+                Skip for now
               </button>
             </div>
           )}
@@ -234,21 +325,22 @@ export function CustomerFlow({
               <p className="mt-1 text-sm text-gray-600">
                 Stay in the loop with offers and new dishes.
               </p>
-              <a
-                href={`https://instagram.com/${(instagramHandle ?? "").replace(/^@/, "")}`}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => setInstaClicked(true)}
+              <button
+                onClick={goInstagram}
                 className="btn mt-4 w-full text-white"
                 style={accent}
               >
                 Follow {instagramHandle}
-              </a>
+              </button>
+              <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                After following, <strong>return to this page</strong> — your spin
+                will be ready and waiting.
+              </p>
               <button
                 onClick={() => setStep("game")}
                 className="mt-3 w-full text-sm font-medium text-gray-500"
               >
-                {instaClicked ? "Done — continue" : "Skip & continue"}
+                Skip for now
               </button>
             </div>
           )}
