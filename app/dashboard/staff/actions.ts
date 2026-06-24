@@ -26,7 +26,7 @@ export async function createStaff(
   const merchantId = ctx.merchant?.id;
   if (!merchantId) return { error: "Merchant account not found." };
 
-  const { error } = await admin.auth.admin.createUser({
+  const { data, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -42,6 +42,14 @@ export async function createStaff(
       return { error: "A user with this email already exists." };
     }
     return { error: error.message };
+  }
+
+  // Explicitly confirm email — createUser's email_confirm flag is not
+  // always honoured depending on Supabase project settings.
+  if (data.user) {
+    await admin.auth.admin.updateUserById(data.user.id, {
+      email_confirm: true,
+    });
   }
 
   revalidatePath("/dashboard/staff");
