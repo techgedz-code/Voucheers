@@ -26,9 +26,18 @@ export function CustomerSearch() {
     setConfirmCode(null);
   }
 
-  // Clear the confirm prompt once the redeem action completes.
+  // After a successful redeem, re-run the search so the voucher list
+  // reflects the updated status from the database.
   useEffect(() => {
-    if (redeemState.done) setConfirmCode(null);
+    if (redeemState.done) {
+      setConfirmCode(null);
+      if (redeemState.ok && searchState.result) {
+        const fd = new FormData();
+        fd.append("phone", searchState.result.phone);
+        searchAction(fd);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [redeemState.done]);
 
   return (
