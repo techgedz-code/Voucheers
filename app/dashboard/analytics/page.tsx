@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Outlet } from "@/lib/types";
 
 export default async function AnalyticsPage() {
-  await requireAuth(["merchant", "staff"]);
+  await requireAuth(["merchant"]);
   const supabase = await createClient();
 
   // Funnel counts (RLS scopes everything to this merchant's outlets).

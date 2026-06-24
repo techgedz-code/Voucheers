@@ -18,7 +18,7 @@ function row(cells: (string | number | boolean | null | undefined)[]): string {
 }
 
 export async function GET(req: NextRequest) {
-  await requireAuth(["merchant", "staff"]);
+  await requireAuth(["merchant"]);
   const supabase = await createClient();
 
   const { searchParams } = req.nextUrl;

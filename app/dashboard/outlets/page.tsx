@@ -5,7 +5,7 @@ import type { Outlet } from "@/lib/types";
 import { OutletForm } from "./OutletForm";
 
 export default async function OutletsPage() {
-  const ctx = await requireAuth(["merchant", "staff"]);
+  const ctx = await requireAuth(["merchant"]);
   const supabase = await createClient();
 
   const { data: outlets } = await supabase

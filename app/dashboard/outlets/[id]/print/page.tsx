@@ -12,7 +12,7 @@ export default async function PrintPoster({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await requireAuth(["merchant", "staff"]);
+  await requireAuth(["merchant"]);
   const supabase = await createClient();
 
   const { data: outlet } = await supabase

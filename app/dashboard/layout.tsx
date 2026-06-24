@@ -9,18 +9,25 @@ export default async function DashboardLayout({
   const ctx = await requireAuth(["merchant", "staff"]);
   const status = ctx.merchant?.subscription_status ?? "pending";
 
+  const isStaff = ctx.profile.role === "staff";
+  const merchantLinks = [
+    { href: "/dashboard", label: "Overview" },
+    { href: "/dashboard/outlets", label: "Outlets" },
+    { href: "/dashboard/analytics", label: "Analytics" },
+    { href: "/dashboard/customers", label: "Customers" },
+    { href: "/dashboard/redeem", label: "Redeem" },
+    { href: "/dashboard/staff", label: "Staff" },
+  ];
+  const staffLinks = [
+    { href: "/dashboard/redeem", label: "Redeem" },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <TopBar
         title={ctx.merchant?.business_name ?? "Dashboard"}
-        subtitle={ctx.profile.role === "staff" ? "Staff" : "Merchant"}
-        links={[
-          { href: "/dashboard", label: "Overview" },
-          { href: "/dashboard/outlets", label: "Outlets" },
-          { href: "/dashboard/analytics", label: "Analytics" },
-          { href: "/dashboard/customers", label: "Customers" },
-          { href: "/dashboard/redeem", label: "Redeem" },
-        ]}
+        subtitle={isStaff ? "Staff" : "Merchant"}
+        links={isStaff ? staffLinks : merchantLinks}
       />
 
       {status !== "active" && (

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CustomerDatabase, type AggregatedCustomer } from "./CustomerDatabase";
 
 export default async function CustomersPage() {
-  await requireAuth(["merchant", "staff"]);
+  await requireAuth(["merchant"]);
   const supabase = await createClient();
 
   // Fetch all entries scoped to this merchant via RLS.

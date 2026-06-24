@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardHome() {
   const ctx = await requireAuth(["merchant", "staff"]);
+  if (ctx.profile.role === "staff") redirect("/dashboard/redeem");
   const supabase = await createClient();
 
   const { count: outletCount } = await supabase
