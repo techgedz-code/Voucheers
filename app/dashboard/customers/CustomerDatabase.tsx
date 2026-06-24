@@ -23,7 +23,6 @@ interface Props {
 export function CustomerDatabase({ customers, outlets }: Props) {
   const [search, setSearch] = useState("");
   const [outletFilter, setOutletFilter] = useState("");
-  const [consentFilter, setConsentFilter] = useState<"all" | "yes" | "no">("all");
 
   const filtered = useMemo(() => {
     return customers.filter((c) => {
@@ -34,16 +33,13 @@ export function CustomerDatabase({ customers, outlets }: Props) {
         }
       }
       if (outletFilter && !c.outlet_ids.includes(outletFilter)) return false;
-      if (consentFilter === "yes" && !c.pdpa_consent) return false;
-      if (consentFilter === "no" && c.pdpa_consent) return false;
       return true;
     });
-  }, [customers, search, outletFilter, consentFilter]);
+  }, [customers, search, outletFilter]);
 
   const exportParams = new URLSearchParams({
     ...(outletFilter ? { outlet: outletFilter } : {}),
     ...(search ? { q: search } : {}),
-    ...(consentFilter !== "all" ? { consent: consentFilter } : {}),
   });
 
   return (
@@ -78,21 +74,6 @@ export function CustomerDatabase({ customers, outlets }: Props) {
           </div>
         )}
 
-        <div>
-          <label className="label">PDPA consent</label>
-          <select
-            className="input"
-            value={consentFilter}
-            onChange={(e) =>
-              setConsentFilter(e.target.value as "all" | "yes" | "no")
-            }
-          >
-            <option value="all">All</option>
-            <option value="yes">Given</option>
-            <option value="no">Not given</option>
-          </select>
-        </div>
-
         <a
           href={`/dashboard/customers/export?${exportParams}`}
           className="btn-outline shrink-0"
@@ -118,15 +99,14 @@ export function CustomerDatabase({ customers, outlets }: Props) {
               <th className="pb-2 pr-4">Last visit</th>
               <th className="pb-2 pr-4 text-right">Visits</th>
               <th className="pb-2 pr-4 text-right">Vouchers</th>
-              <th className="pb-2 pr-4 text-right">Redeemed</th>
-              <th className="pb-2 text-center">PDPA</th>
+              <th className="pb-2 text-right">Redeemed</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={7}
                   className="py-6 text-center text-gray-400"
                 >
                   No customers match the current filters.
@@ -160,14 +140,7 @@ export function CustomerDatabase({ customers, outlets }: Props) {
                 </td>
                 <td className="py-2 pr-4 text-right">{c.visit_count}</td>
                 <td className="py-2 pr-4 text-right">{c.vouchers_issued}</td>
-                <td className="py-2 pr-4 text-right">{c.vouchers_redeemed}</td>
-                <td className="py-2 text-center">
-                  {c.pdpa_consent ? (
-                    <span className="text-green-600">✓</span>
-                  ) : (
-                    <span className="text-gray-300">—</span>
-                  )}
-                </td>
+                <td className="py-2 text-right">{c.vouchers_redeemed}</td>
               </tr>
             ))}
           </tbody>
