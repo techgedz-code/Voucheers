@@ -27,18 +27,19 @@ export function CustomerSearch() {
   }
 
   // After a successful redeem, re-run the search so the voucher list
-  // reflects the updated status from the database.
+  // reflects the updated status from the database. Watch redeemState.code
+  // (the just-redeemed code) so this fires on every redemption, not just
+  // the first (redeemState.done stays true after the 2nd+).
   useEffect(() => {
-    if (redeemState.done) {
-      setConfirmCode(null);
-      if (redeemState.ok && searchState.result) {
-        const fd = new FormData();
-        fd.append("phone", searchState.result.phone);
-        searchAction(fd);
-      }
+    if (!redeemState.done) return;
+    setConfirmCode(null);
+    if (redeemState.ok && redeemState.code && searchState.result) {
+      const fd = new FormData();
+      fd.append("phone", searchState.result.phone);
+      searchAction(fd);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [redeemState.done]);
+  }, [redeemState.code]);
 
   return (
     <div className="space-y-6">
