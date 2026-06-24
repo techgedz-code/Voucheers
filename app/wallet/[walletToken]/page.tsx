@@ -4,6 +4,7 @@ import { qrPngDataUrl } from "@/lib/qr";
 import { rewardDescription } from "@/lib/constants";
 import type { RewardType, VoucherStatus } from "@/lib/types";
 import { WalletPwa } from "./WalletPwa";
+import { VoucherQr } from "./VoucherQr";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +91,8 @@ export default async function WalletPage({
   // Pre-render QR codes for each voucher.
   const qrMap: Record<string, string> = {};
   for (const v of vouchers) {
-    if (v.status === "active") qrMap[v.id] = await qrPngDataUrl(v.code, { width: 220 });
+    // Render at high resolution so the QR stays sharp when tapped to enlarge.
+    if (v.status === "active") qrMap[v.id] = await qrPngDataUrl(v.code, { width: 512 });
   }
 
   function isExpired(v: VoucherRow) {
@@ -158,8 +160,7 @@ export default async function WalletPage({
 
                 {!used && !expired && (
                   <div className="mt-3 flex flex-col items-center rounded-xl bg-gray-50 p-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={qrMap[v.id]} alt="Voucher QR" width={160} height={160} />
+                    <VoucherQr src={qrMap[v.id]} code={v.code} />
                     <div className="mt-2 text-xs text-gray-500">Show this to staff</div>
                     <div className="text-xl font-extrabold tracking-widest">{v.code}</div>
                   </div>

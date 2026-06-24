@@ -93,11 +93,25 @@ export function RedeemClient() {
         </p>
 
         {scanning && (
-          <div className="mt-4 overflow-hidden rounded-lg bg-black">
-            <video ref={videoRef} className="w-full" muted playsInline />
+          <div className="relative mt-4 overflow-hidden rounded-lg bg-black">
+            <video
+              ref={videoRef}
+              className="block aspect-square w-full object-cover"
+              muted
+              playsInline
+              autoPlay
+            />
+            {/* Aiming reticle — clear square in a dimmed surround so staff know
+                where to point the camera at the customer's voucher QR. */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="h-3/5 w-3/5 rounded-2xl border-4 border-white/90 shadow-[0_0_0_2000px_rgba(0,0,0,0.45)]" />
+            </div>
+            <p className="pointer-events-none absolute inset-x-0 top-3 text-center text-xs font-medium text-white/90">
+              Point at the voucher QR
+            </p>
             <button
               onClick={stopScan}
-              className="btn-outline m-2 !py-1.5"
+              className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-lg bg-white/90 px-4 py-1.5 text-sm font-semibold text-gray-800 hover:bg-white"
             >
               Stop camera
             </button>
