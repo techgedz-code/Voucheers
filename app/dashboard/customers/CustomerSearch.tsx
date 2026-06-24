@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { searchCustomer, type SearchState } from "./actions";
 import { redeem, type RedeemState } from "../redeem/actions";
 
@@ -25,6 +25,11 @@ export function CustomerSearch() {
   function cancelRedeem() {
     setConfirmCode(null);
   }
+
+  // Clear the confirm prompt once the redeem action completes.
+  useEffect(() => {
+    if (redeemState.done) setConfirmCode(null);
+  }, [redeemState.done]);
 
   return (
     <div className="space-y-6">
@@ -171,7 +176,6 @@ export function CustomerSearch() {
                                 type="submit"
                                 disabled={redeeming}
                                 className="btn-primary w-full !py-1.5 text-sm"
-                                onClick={() => setConfirmCode(null)}
                               >
                                 {redeeming ? "Processing…" : "Confirm redeem"}
                               </button>
