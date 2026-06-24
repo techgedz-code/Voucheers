@@ -21,6 +21,7 @@ export function RedeemClient() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
+  const detectorRef = useRef<BarcodeDetectorLike | null>(null);
 
   useEffect(() => {
     setSupported(
@@ -46,38 +47,56 @@ export function RedeemClient() {
         video: { facingMode: "environment" },
       });
       streamRef.current = stream;
-      setScanning(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
       // @ts-expect-error experimental global
-      const detector: BarcodeDetectorLike = new window.BarcodeDetector({
+      detectorRef.current = new window.BarcodeDetector({
         formats: ["qr_code"],
       });
-
-      const tick = async () => {
-        if (!streamRef.current || !videoRef.current) return;
-        try {
-          const codes = await detector.detect(videoRef.current);
-          if (codes.length > 0) {
-            const value = codes[0].rawValue.trim();
-            setCode(value);
-            stopScan();
-            // Auto-submit.
-            requestAnimationFrame(() => formRef.current?.requestSubmit());
-            return;
-          }
-        } catch {
-          // ignore per-frame errors
-        }
-        requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
+      // Set scanning to true to mount the video element; attachment happens
+      // in useEffect once videoRef is ready.
+      setScanning(true);
     } catch {
       setScanning(false);
     }
   }
+
+  // Once scanning is true and the video element is mounted, attach the stream
+  // and start the detection loop. This handles the timing issue on Android.
+  useEffect(() => {
+    if (!scanning || !videoRef.current || !streamRef.current || !detectorRef.current) {
+      return;
+    }
+
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    const detector = detectorRef.current;
+
+    video.srcObject = stream;
+    video.play().catch(() => {
+      // Some browsers may reject autoplay; this is OK, the user can manually
+      // unmute or interact further if needed.
+    });
+
+    const tick = async () => {
+      if (!streamRef.current || !videoRef.current) return;
+      try {
+        const codes = await detector.detect(videoRef.current);
+        if (codes.length > 0) {
+          const value = codes[0].rawValue.trim();
+          setCode(value);
+          stopScan();
+          // Auto-submit.
+          requestAnimationFrame(() => formRef.current?.requestSubmit());
+          return;
+        }
+      } catch {
+        // ignore per-frame errors
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+
+    return () => stopScan();
+  }, [scanning]);
 
   useEffect(() => () => stopScan(), []);
 
