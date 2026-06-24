@@ -96,9 +96,10 @@ export function RedeemClient() {
           <div className="relative mt-4 h-80 w-80 mx-auto overflow-hidden rounded-lg bg-black">
             <video
               ref={videoRef}
-              className="w-full h-full object-cover"
+              className="w-full"
               muted
               playsInline
+              autoPlay
             />
             {/* Aiming reticle — clear square in a dimmed surround so staff know
                 where to point the camera at the customer's voucher QR. */}
