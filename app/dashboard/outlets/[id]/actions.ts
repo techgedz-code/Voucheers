@@ -56,12 +56,14 @@ export async function saveCampaignSettings(formData: FormData) {
   const campaignId = String(formData.get("campaign_id"));
   const instagram = String(formData.get("instagram_handle") || "").trim();
   const isActive = String(formData.get("is_active")) === "on";
+  const limitOnePlay = String(formData.get("limit_one_play_per_day")) === "on";
 
   await supabase
     .from("campaigns")
     .update({
       instagram_handle: instagram || null,
       is_active: isActive,
+      limit_one_play_per_day: limitOnePlay,
     })
     .eq("id", campaignId);
 

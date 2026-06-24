@@ -105,6 +105,21 @@ export default async function OutletDetail({
               />
               Campaign active (customers can play)
             </label>
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="limit_one_play_per_day"
+                defaultChecked={c.limit_one_play_per_day}
+                className="mt-0.5 h-4 w-4"
+              />
+              <span>
+                Limit to one play per customer per day
+                <span className="block text-xs text-gray-500">
+                  Recommended. Prevents the same phone number spinning repeatedly
+                  in one day. Turn off to allow unlimited plays.
+                </span>
+              </span>
+            </label>
             <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-600">
               <div>
                 <span className="font-medium">Review link:</span>{" "}

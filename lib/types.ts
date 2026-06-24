@@ -56,6 +56,7 @@ export interface Campaign {
   game_type: GameType;
   instagram_handle: string | null;
   is_active: boolean;
+  limit_one_play_per_day: boolean;
   created_at: string;
 }
 
