@@ -429,7 +429,7 @@ export function CustomerFlow({
         </div>
 
         <p className="mt-6 text-center text-[11px] text-gray-400">
-          Powered by Voucher App · Reward is for participating; reviews are
+          Powered by Voucheers · Reward is for participating; reviews are
           optional and never required.
         </p>
       </div>

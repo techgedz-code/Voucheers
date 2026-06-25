@@ -15,7 +15,7 @@ export function TopBar({
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Link href="/" className="text-base font-extrabold text-brand">
-            Voucher App
+            Voucheers
           </Link>
           <span className="hidden text-sm text-gray-400 sm:inline">/</span>
           <div>

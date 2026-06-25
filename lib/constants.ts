@@ -1,6 +1,6 @@
 import type { RewardType } from "./types";
 
-export const APP_NAME = "Voucher App";
+export const APP_NAME = "Voucheers";
 
 export function appUrl(): string {
   return (

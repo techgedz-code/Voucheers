@@ -11,7 +11,7 @@ export default async function SignupPage({
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
       <Link href="/" className="mb-8 text-center text-lg font-extrabold text-brand">
-        Voucher App
+        Voucheers
       </Link>
       <div className="card">
         <h1 className="text-xl font-bold">Create your restaurant account</h1>

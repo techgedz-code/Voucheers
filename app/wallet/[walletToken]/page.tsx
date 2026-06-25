@@ -183,7 +183,7 @@ export default async function WalletPage({
         </div>
 
         <p className="mt-6 text-center text-[11px] text-gray-400">
-          Powered by Voucher App
+          Powered by Voucheers
         </p>
       </div>
     </main>

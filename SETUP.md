@@ -1,4 +1,4 @@
-# Voucher App — Setup Guide
+# Voucheers — Setup Guide
 
 A step-by-step guide to run the platform locally. No prior coding needed — just follow along.
 

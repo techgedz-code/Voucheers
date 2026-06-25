@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Voucher App — Reviews & Rewards for Restaurants",
+  title: "Voucheers — Reviews & Rewards for Restaurants",
   description:
     "Turn diners into reviews and repeat visits. Scan, play, win a voucher.",
 };

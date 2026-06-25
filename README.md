@@ -1,4 +1,4 @@
-# Voucher App — Reviews & Rewards SaaS for Restaurants
+# Voucheers — Reviews & Rewards SaaS for Restaurants
 
 A subscription SaaS that helps restaurants earn more Google reviews and repeat
 visits. Diners scan a QR, are invited (never required) to leave a Google review,

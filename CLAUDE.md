@@ -44,6 +44,12 @@ A multi-tenant subscription SaaS sold to restaurants. Diners scan a QR, are invi
 
 **Auth gating** is two-layered: `proxy.ts` (Next 16's renamed "middleware") refreshes the session and redirects unauthenticated `/dashboard`/`/admin` to `/login`; `lib/auth.ts` `requireAuth(roles)` does the per-page role check and is called at the top of every protected page/action.
 
+**Staff role** is a fourth Supabase auth user type (role = `"staff"`). Merchants create staff accounts via `app/dashboard/staff/` using `admin.auth.admin.createUser()` with `user_metadata: { role: "staff", merchant_id }`. The `handle_new_user` trigger reads `merchant_id` from metadata and sets it on the profile. Two gotchas: (1) `email_confirm: true` in `createUser` is not reliably honoured — always follow up with `admin.auth.admin.updateUserById(id, { email_confirm: true })`; (2) RLS scopes staff data to their merchant via `auth_merchant_id()` (same function as merchant — it reads `merchant_id` from the profile), so staff inherit the correct tenant automatically. Staff are restricted to `/dashboard/redeem` only — `app/dashboard/layout.tsx` renders only the Redeem nav link for staff, and `app/dashboard/page.tsx` redirects staff there on load. All other dashboard pages call `requireAuth(["merchant"])` (not staff).
+
+**Camera scanner** (`app/dashboard/redeem/RedeemClient.tsx`) uses the `BarcodeDetector` Web API — only available on Android Chrome; iOS Safari/Chrome fall back to manual code entry. Critical timing: `startScan()` acquires the `MediaStream` and sets `scanning=true`, but the video element isn't in the DOM yet. A separate `useEffect([scanning])` attaches the stream to the `<video>` ref after React mounts it. Never call `video.srcObject = stream` inside the same function that triggers the conditional render.
+
+**Customer database** (`app/dashboard/customers/`) aggregates entries by phone number in JS on the server (not via SQL `GROUP BY`) — acceptable at restaurant scale and simpler. The same aggregation logic is duplicated in `page.tsx` (for the UI) and `export/route.ts` (for CSV download) — intentionally, per the no-premature-abstraction rule. `CustomerSearch.tsx` (phone lookup + inline redemption) lives in `/dashboard/customers/` but is rendered on the Redeem page so staff can access it. `requireAuth(["merchant", "staff"])` on search/redeem actions; `requireAuth(["merchant"])` on the database page and export route.
+
 ## Conventions specific to this codebase
 
 - **Compliance is product-critical:** reviews are "soft-gated" — the reward is for participating, never gated on leaving (or on a positive) review. Never write copy like "review us to win." PDPA consent is required on the customer form.
@@ -57,8 +63,15 @@ A multi-tenant subscription SaaS sold to restaurants. Diners scan a QR, are invi
 
 - `app/admin/*` — super admin (approvals, quota, abuse flags + `runAbuseScan` → `detect_abuse` RPC)
 - `app/dashboard/*` — merchant (outlets, `outlets/[id]` campaign+wheel+branding, analytics, redeem)
+  - `app/dashboard/redeem/` — voucher scanner (camera + manual entry) + phone-lookup/redemption (`CustomerSearch`)
+  - `app/dashboard/customers/` — customer database (aggregated by phone), CSV export, `CustomerSearch` component + `searchCustomer` action
+  - `app/dashboard/staff/` — merchant creates/removes staff accounts; `StaffManager` client component
 - `app/c/[qrToken]/*` — public customer flow
-- `app/wallet/[walletToken]/*` — branded PWA wallet
+- `app/wallet/[walletToken]/*` — branded PWA wallet; `VoucherQr.tsx` client component handles tap-to-enlarge QR modal
 - `app/api/draw/route.ts` — the draw engine
 - `lib/*` — `auth`, `wheel`, `qr`, `email`, `request`, `constants`, `types`, supabase clients
 - `supabase/migrations/*` — schema/RLS/triggers/functions (apply in order); `seed_super_admin.sql` promotes a user to super admin
+
+## Known bugs / deferred work
+
+- **Voucher emails not sent** — `lib/email.ts` no-ops silently when `RESEND_API_KEY` is absent. Verify the key is set in Vercel environment variables and that `app/api/draw/route.ts` is calling `sendVoucherEmail`. Fix before production launch.

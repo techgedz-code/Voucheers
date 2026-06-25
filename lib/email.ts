@@ -17,7 +17,7 @@ interface VoucherEmailArgs {
  */
 export async function sendVoucherEmail(args: VoucherEmailArgs): Promise<void> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || "Voucher App <onboarding@resend.dev>";
+  const from = process.env.EMAIL_FROM || "Voucheers <onboarding@resend.dev>";
   if (!key) {
     console.log("[email] RESEND_API_KEY not set — skipping voucher email to", args.to);
     return;
@@ -59,12 +59,17 @@ export async function sendVoucherEmail(args: VoucherEmailArgs): Promise<void> {
 
   try {
     const resend = new Resend(key);
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from,
       to: args.to,
       subject: `Your ${args.outletName} voucher — ${args.rewardText}`,
       html,
     });
+    if (error) {
+      console.error("[email] Resend API error:", JSON.stringify(error));
+    } else {
+      console.log("[email] sent ok, id:", data?.id);
+    }
   } catch (e) {
     console.error("[email] failed to send voucher email:", e);
   }
