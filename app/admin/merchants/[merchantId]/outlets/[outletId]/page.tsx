@@ -62,10 +62,8 @@ export default async function AdminOutletPage({
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500">
-        <Link href="/admin" className="hover:text-brand">Merchants</Link>
-        <span>/</span>
-        <Link href={`/admin/merchants/${merchantId}`} className="hover:text-brand">
-          Overview
+        <Link href={`/admin/merchants/${merchantId}/outlets`} className="hover:text-brand">
+          Outlets
         </Link>
         <span>/</span>
         <span className="font-medium text-gray-700">{o.name}</span>

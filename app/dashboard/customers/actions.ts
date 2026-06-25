@@ -37,20 +37,49 @@ export async function searchCustomer(
   _prev: SearchState,
   formData: FormData
 ): Promise<SearchState> {
-  await requireAuth(["merchant", "staff"]);
-  const supabase = await createClient();
+  const ctx = await requireAuth(["merchant", "staff", "super_admin"]);
+
+  // Super admin manages a specific merchant via the admin client; scope the
+  // search to that merchant's outlets so results don't leak across tenants.
+  const scopeMerchantId =
+    ctx.profile.role === "super_admin"
+      ? String(formData.get("merchant_id") || "").trim()
+      : null;
+
+  const { createAdminClient } = scopeMerchantId
+    ? await import("@/lib/supabase/admin")
+    : { createAdminClient: null };
+  const supabase = scopeMerchantId && createAdminClient
+    ? createAdminClient()
+    : await createClient();
 
   const raw = String(formData.get("phone") || "").trim();
   // Normalise: strip spaces/dashes so "012 345 6789" matches "0123456789"
   const phone = raw.replace(/[\s\-]/g, "");
   if (!phone) return { error: "Enter a phone number to search." };
 
-  // entries are scoped to this merchant's outlets via RLS.
-  const { data: entries } = await supabase
+  // When scoping for super admin, restrict to this merchant's outlet ids.
+  let scopeOutletIds: string[] | null = null;
+  if (scopeMerchantId && supabase) {
+    const { data: outletRows } = await supabase
+      .from("outlets")
+      .select("id")
+      .eq("merchant_id", scopeMerchantId);
+    scopeOutletIds = (outletRows ?? []).map((o) => o.id as string);
+    if (scopeOutletIds.length === 0) return { phone: raw, result: null };
+  }
+
+  // entries are scoped to this merchant's outlets via RLS (merchant/staff) or
+  // by explicit outlet filter (super admin managing a merchant).
+  let entriesQuery = supabase
     .from("entries")
     .select("id, phone, email, pdpa_consent, created_at, outlets(name)")
     .eq("phone", phone)
     .order("created_at", { ascending: false });
+  if (scopeOutletIds) {
+    entriesQuery = entriesQuery.in("outlet_id", scopeOutletIds);
+  }
+  const { data: entries } = await entriesQuery;
 
   if (!entries || entries.length === 0) {
     return { phone: raw, result: null };

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { appUrl } from "@/lib/constants";
 import { qrSvg } from "@/lib/qr";
 import type { Outlet } from "@/lib/types";
@@ -12,8 +13,9 @@ export default async function PrintPoster({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await requireAuth(["merchant"]);
-  const supabase = await createClient();
+  const ctx = await requireAuth(["merchant", "super_admin"]);
+  const supabase =
+    ctx.profile.role === "super_admin" ? createAdminClient() : await createClient();
 
   const { data: outlet } = await supabase
     .from("outlets")

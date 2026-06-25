@@ -1,9 +1,6 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { StaffManager } from "@/app/dashboard/staff/StaffManager";
-import type { Merchant } from "@/lib/types";
 
 export default async function AdminMerchantStaffPage({
   params,
@@ -13,14 +10,6 @@ export default async function AdminMerchantStaffPage({
   const { merchantId } = await params;
   await requireAuth(["super_admin"]);
   const admin = createAdminClient();
-
-  const { data: merchantData } = await admin
-    .from("merchants")
-    .select("*")
-    .eq("id", merchantId)
-    .single();
-  if (!merchantData) notFound();
-  const merchant = merchantData as Merchant;
 
   const { data: staffProfiles } = await admin
     .from("profiles")
@@ -43,19 +32,8 @@ export default async function AdminMerchantStaffPage({
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500">
-        <Link href="/admin" className="hover:text-brand">Merchants</Link>
-        <span>/</span>
-        <Link href={`/admin/merchants/${merchantId}`} className="hover:text-brand">
-          {merchant.business_name}
-        </Link>
-        <span>/</span>
-        <span className="font-medium text-gray-700">Staff</span>
-      </div>
-
       <div>
-        <h1 className="text-2xl font-bold">Staff — {merchant.business_name}</h1>
+        <h1 className="text-xl font-bold">Staff</h1>
         <p className="mt-1 text-sm text-gray-500">
           Manage staff accounts for this merchant. Staff can only access the Redeem page.
         </p>

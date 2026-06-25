@@ -14,7 +14,7 @@ const STATUS_BADGE: Record<string, string> = {
   void: "bg-yellow-100 text-yellow-700",
 };
 
-export function CustomerSearch() {
+export function CustomerSearch({ merchantId }: { merchantId?: string }) {
   const [searchState, searchAction, searching] = useActionState(searchCustomer, initialSearch);
   const [redeemState, redeemAction, redeeming] = useActionState(redeem, initialRedeem);
   const [confirmCode, setConfirmCode] = useState<string | null>(null);
@@ -36,6 +36,7 @@ export function CustomerSearch() {
     if (redeemState.ok && redeemState.code && searchState.result) {
       const fd = new FormData();
       fd.append("phone", searchState.result.phone);
+      if (merchantId) fd.append("merchant_id", merchantId);
       searchAction(fd);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,6 +48,9 @@ export function CustomerSearch() {
       <div className="card">
         <h2 className="mb-3 font-semibold">Search by phone number</h2>
         <form action={searchAction} className="flex gap-2">
+          {merchantId && (
+            <input type="hidden" name="merchant_id" value={merchantId} />
+          )}
           <input
             name="phone"
             type="tel"

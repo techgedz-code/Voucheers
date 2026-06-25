@@ -18,9 +18,14 @@ export interface AggregatedCustomer {
 interface Props {
   customers: AggregatedCustomer[];
   outlets: { id: string; name: string }[];
+  exportBasePath?: string;
 }
 
-export function CustomerDatabase({ customers, outlets }: Props) {
+export function CustomerDatabase({
+  customers,
+  outlets,
+  exportBasePath = "/dashboard/customers/export",
+}: Props) {
   const [search, setSearch] = useState("");
   const [outletFilter, setOutletFilter] = useState("");
 
@@ -75,7 +80,7 @@ export function CustomerDatabase({ customers, outlets }: Props) {
         )}
 
         <a
-          href={`/dashboard/customers/export?${exportParams}`}
+          href={`${exportBasePath}?${exportParams}`}
           className="btn-outline shrink-0"
           download="customers.csv"
         >

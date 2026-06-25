@@ -1,0 +1,121 @@
+import { requireAuth } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  CustomerDatabase,
+  type AggregatedCustomer,
+} from "@/app/dashboard/customers/CustomerDatabase";
+
+export default async function AdminMerchantCustomers({
+  params,
+}: {
+  params: Promise<{ merchantId: string }>;
+}) {
+  const { merchantId } = await params;
+  await requireAuth(["super_admin"]);
+  const admin = createAdminClient();
+
+  // Outlets for this merchant scope the customer query.
+  const { data: outletsRaw } = await admin
+    .from("outlets")
+    .select("id, name")
+    .eq("merchant_id", merchantId)
+    .order("name");
+  const outlets = (outletsRaw ?? []) as Array<{ id: string; name: string }>;
+  const outletIds = outlets.map((o) => o.id);
+
+  let customers: AggregatedCustomer[] = [];
+
+  if (outletIds.length > 0) {
+    const { data: entriesRaw } = await admin
+      .from("entries")
+      .select("id, phone, email, pdpa_consent, outlet_id, created_at, outlets(name)")
+      .in("outlet_id", outletIds)
+      .order("created_at", { ascending: false });
+
+    const entries = (entriesRaw ?? []) as unknown as Array<{
+      id: string;
+      phone: string;
+      email: string | null;
+      pdpa_consent: boolean;
+      outlet_id: string;
+      created_at: string;
+      outlets: { name: string } | null;
+    }>;
+
+    const entryIds = entries.map((e) => e.id);
+
+    const { data: vouchersRaw } =
+      entryIds.length > 0
+        ? await admin
+            .from("issued_vouchers")
+            .select("entry_id, status")
+            .in("entry_id", entryIds)
+        : { data: [] };
+
+    const vouchers = (vouchersRaw ?? []) as Array<{
+      entry_id: string;
+      status: string;
+    }>;
+    const entryPhoneMap = new Map(entries.map((e) => [e.id, e.phone]));
+
+    // Aggregate entries by phone number.
+    const map = new Map<string, AggregatedCustomer>();
+    for (const e of entries) {
+      const outletName = (e.outlets as { name: string } | null)?.name ?? null;
+      const existing = map.get(e.phone);
+      if (existing) {
+        if (e.created_at < existing.first_seen) existing.first_seen = e.created_at;
+        if (e.created_at > existing.last_seen) existing.last_seen = e.created_at;
+        existing.visit_count++;
+        if (e.outlet_id && !existing.outlet_ids.includes(e.outlet_id)) {
+          existing.outlet_ids.push(e.outlet_id);
+          if (outletName) existing.outlet_names.push(outletName);
+        }
+      } else {
+        map.set(e.phone, {
+          phone: e.phone,
+          email: e.email ?? null,
+          pdpa_consent: e.pdpa_consent,
+          first_seen: e.created_at,
+          last_seen: e.created_at,
+          visit_count: 1,
+          vouchers_issued: 0,
+          vouchers_redeemed: 0,
+          outlet_ids: e.outlet_id ? [e.outlet_id] : [],
+          outlet_names: outletName ? [outletName] : [],
+        });
+      }
+    }
+
+    for (const v of vouchers) {
+      const phone = entryPhoneMap.get(v.entry_id);
+      if (!phone) continue;
+      const customer = map.get(phone);
+      if (!customer) continue;
+      customer.vouchers_issued++;
+      if (v.status === "redeemed") customer.vouchers_redeemed++;
+    }
+
+    customers = Array.from(map.values()).sort(
+      (a, b) => new Date(b.last_seen).getTime() - new Date(a.last_seen).getTime()
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold">Customers</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          {customers.length} unique customer{customers.length !== 1 ? "s" : ""} across all outlets.
+          To look up and redeem vouchers, use the <strong>Redeem</strong> tab.
+        </p>
+      </div>
+
+      <CustomerDatabase
+        customers={customers}
+        outlets={outlets}
+        exportBasePath={`/admin/merchants/${merchantId}/customers/export`}
+      />
+    </div>
+  );
+}
