@@ -7,9 +7,10 @@ import { updateOutletBranding, type SaveState } from "./actions";
 const initial: SaveState = {};
 
 export function OutletBrandingForm({ outlet }: { outlet: Outlet }) {
-  const [state, action, pending] = useActionState(updateOutletBranding, initial);
+  const [state, dispatch, pending] = useActionState(updateOutletBranding, initial);
 
-  // Controlled so React 19's post-action form-reset can't wipe the inputs.
+  // Controlled fields. We submit via onSubmit + manual dispatch so React 19's
+  // automatic post-action form reset never fires.
   const [name, setName] = useState(outlet.name);
   const [address, setAddress] = useState(outlet.address ?? "");
   const [placeId, setPlaceId] = useState(outlet.google_place_id ?? "");
@@ -17,9 +18,21 @@ export function OutletBrandingForm({ outlet }: { outlet: Outlet }) {
   const [logoUrl, setLogoUrl] = useState(outlet.logo_url ?? "");
   const [brandColor, setBrandColor] = useState(outlet.brand_color ?? "#e11d48");
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const fd = new FormData();
+    fd.set("outlet_id", outlet.id);
+    fd.set("name", name);
+    fd.set("address", address);
+    fd.set("google_place_id", placeId);
+    fd.set("review_url", reviewUrl);
+    fd.set("logo_url", logoUrl);
+    fd.set("brand_color", brandColor);
+    dispatch(fd);
+  }
+
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-2">
-      <input type="hidden" name="outlet_id" value={outlet.id} />
+    <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
       <div>
         <label className="label" htmlFor="name">Outlet name</label>
         <input

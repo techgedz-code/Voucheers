@@ -14,18 +14,30 @@ export function CampaignSettingsForm({
   campaign: Campaign;
   reviewUrl: string | null;
 }) {
-  const [state, action, pending] = useActionState(saveCampaignSettings, initial);
+  const [state, dispatch, pending] = useActionState(saveCampaignSettings, initial);
 
-  // Controlled fields so React 19's automatic form-reset (which fires after the
-  // action completes) can't revert the user's choices back to defaults.
+  // Controlled fields. We submit via onSubmit + manual dispatch (not
+  // <form action={…}>) so React 19's automatic post-action form reset never
+  // fires — otherwise it would visually snap the <select> back to its first
+  // option even though the state is correct.
   const [instagram, setInstagram] = useState(campaign.instagram_handle ?? "");
   const [gameType, setGameType] = useState(campaign.game_type);
   const [isActive, setIsActive] = useState(campaign.is_active);
   const [limitOnePlay, setLimitOnePlay] = useState(campaign.limit_one_play_per_day);
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const fd = new FormData();
+    fd.set("campaign_id", campaign.id);
+    fd.set("instagram_handle", instagram);
+    fd.set("game_type", gameType);
+    if (isActive) fd.set("is_active", "on");
+    if (limitOnePlay) fd.set("limit_one_play_per_day", "on");
+    dispatch(fd);
+  }
+
   return (
-    <form action={action} className="space-y-4">
-      <input type="hidden" name="campaign_id" value={campaign.id} />
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="label" htmlFor="instagram_handle">
           Instagram handle (optional)
