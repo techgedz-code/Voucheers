@@ -1,14 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { SubmitButton } from "@/components/SubmitButton";
 import type { Outlet } from "@/lib/types";
 import { updateOutletBranding, type SaveState } from "./actions";
 
 const initial: SaveState = {};
 
 export function OutletBrandingForm({ outlet }: { outlet: Outlet }) {
-  const [state, action] = useActionState(updateOutletBranding, initial);
+  const [state, action, pending] = useActionState(updateOutletBranding, initial);
 
   return (
     <form action={action} className="grid gap-4 sm:grid-cols-2">
@@ -65,9 +64,9 @@ export function OutletBrandingForm({ outlet }: { outlet: Outlet }) {
         />
       </div>
       <div className="flex items-end">
-        <SubmitButton className="btn-primary" pendingText="Saving…">
-          Save details
-        </SubmitButton>
+        <button type="submit" disabled={pending} className="btn-primary">
+          {pending ? "Saving…" : "Save details"}
+        </button>
       </div>
 
       {(state.error || state.ok) && (

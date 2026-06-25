@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState } from "react";
-import { SubmitButton } from "@/components/SubmitButton";
 import type { Campaign } from "@/lib/types";
 import { saveCampaignSettings, type SaveState } from "./actions";
 import { GameTypeField } from "./GameTypeField";
@@ -15,7 +14,7 @@ export function CampaignSettingsForm({
   campaign: Campaign;
   reviewUrl: string | null;
 }) {
-  const [state, action] = useActionState(saveCampaignSettings, initial);
+  const [state, action, pending] = useActionState(saveCampaignSettings, initial);
 
   return (
     <form action={action} className="space-y-4">
@@ -86,9 +85,9 @@ export function CampaignSettingsForm({
         </p>
       )}
 
-      <SubmitButton className="btn-primary" pendingText="Saving…">
-        Save settings
-      </SubmitButton>
+      <button type="submit" disabled={pending} className="btn-primary">
+        {pending ? "Saving…" : "Save settings"}
+      </button>
     </form>
   );
 }
