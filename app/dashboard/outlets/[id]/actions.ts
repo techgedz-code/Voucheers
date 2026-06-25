@@ -11,7 +11,21 @@ async function getSupabase(role: string) {
   return role === "super_admin" ? createAdminClient() : await createClient();
 }
 
-export async function updateOutletBranding(formData: FormData) {
+export type SaveState = { ok?: boolean; error?: string };
+
+/** Revalidate every page that renders outlet/campaign config (merchant + admin). */
+function revalidateOutletPages(outletId?: string) {
+  revalidatePath("/dashboard/outlets");
+  revalidatePath("/dashboard/outlets/[id]", "page");
+  if (outletId) revalidatePath(`/dashboard/outlets/${outletId}`);
+  revalidatePath("/admin/merchants");
+  revalidatePath("/admin/merchants/[merchantId]/outlets/[outletId]", "page");
+}
+
+export async function updateOutletBranding(
+  _prev: SaveState,
+  formData: FormData
+): Promise<SaveState> {
   const ctx = await requireAuth(["merchant", "super_admin"]);
   const supabase = await getSupabase(ctx.profile.role);
 
@@ -25,7 +39,7 @@ export async function updateOutletBranding(formData: FormData) {
 
   const review_url = reviewInput || (placeId ? googleReviewUrl(placeId) : null);
 
-  await supabase
+  const { error } = await supabase
     .from("outlets")
     .update({
       name: name || undefined,
@@ -37,8 +51,10 @@ export async function updateOutletBranding(formData: FormData) {
     })
     .eq("id", id);
 
-  revalidatePath(`/dashboard/outlets/${id}`);
-  revalidatePath(`/admin/merchants`);
+  if (error) return { error: error.message };
+
+  revalidateOutletPages(id);
+  return { ok: true };
 }
 
 /** Editable shape sent from the wheel editor (subset of VoucherType). */
@@ -56,7 +72,10 @@ export interface SegmentInput {
   sort_order: number;
 }
 
-export async function saveCampaignSettings(formData: FormData) {
+export async function saveCampaignSettings(
+  _prev: SaveState,
+  formData: FormData
+): Promise<SaveState> {
   const ctx = await requireAuth(["merchant", "super_admin"]);
   const supabase = await getSupabase(ctx.profile.role);
   const campaignId = String(formData.get("campaign_id"));
@@ -67,7 +86,7 @@ export async function saveCampaignSettings(formData: FormData) {
   const gameType: GameType =
     gameTypeRaw === "football" ? "football" : "spin_wheel";
 
-  await supabase
+  const { error } = await supabase
     .from("campaigns")
     .update({
       instagram_handle: instagram || null,
@@ -77,8 +96,10 @@ export async function saveCampaignSettings(formData: FormData) {
     })
     .eq("id", campaignId);
 
-  revalidatePath(`/dashboard/outlets`);
-  revalidatePath(`/admin/merchants`);
+  if (error) return { error: error.message };
+
+  revalidateOutletPages();
+  return { ok: true };
 }
 
 export type SaveSegmentsState = { error?: string; ok?: boolean };

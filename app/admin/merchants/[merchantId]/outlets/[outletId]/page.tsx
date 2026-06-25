@@ -7,11 +7,8 @@ import { qrPngDataUrl } from "@/lib/qr";
 import type { Campaign, Outlet, VoucherType } from "@/lib/types";
 import { VoucherWheelEditor } from "@/app/dashboard/outlets/[id]/VoucherWheelEditor";
 import { CopyConfigButton } from "@/app/dashboard/outlets/[id]/CopyConfigButton";
-import { GameTypeField } from "@/app/dashboard/outlets/[id]/GameTypeField";
-import {
-  saveCampaignSettings,
-  updateOutletBranding,
-} from "@/app/dashboard/outlets/[id]/actions";
+import { CampaignSettingsForm } from "@/app/dashboard/outlets/[id]/CampaignSettingsForm";
+import { OutletBrandingForm } from "@/app/dashboard/outlets/[id]/OutletBrandingForm";
 
 export default async function AdminOutletPage({
   params,
@@ -97,123 +94,14 @@ export default async function AdminOutletPage({
         {/* Campaign settings */}
         <div className="card lg:col-span-2">
           <h2 className="mb-3 font-semibold">Campaign settings</h2>
-          <form action={saveCampaignSettings} className="space-y-4">
-            <input type="hidden" name="campaign_id" value={c.id} />
-            <div>
-              <label className="label" htmlFor="instagram_handle">
-                Instagram handle (optional)
-              </label>
-              <input
-                id="instagram_handle"
-                name="instagram_handle"
-                defaultValue={c.instagram_handle ?? ""}
-                placeholder="@yourrestaurant"
-                className="input"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Shown as an optional "Follow us" step before the game.
-              </p>
-            </div>
-            <GameTypeField value={c.game_type} />
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="is_active"
-                defaultChecked={c.is_active}
-                className="h-4 w-4"
-              />
-              Campaign active (customers can play)
-            </label>
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="limit_one_play_per_day"
-                defaultChecked={c.limit_one_play_per_day}
-                className="mt-0.5 h-4 w-4"
-              />
-              <span>
-                Limit to one play per customer per day
-                <span className="block text-xs text-gray-500">
-                  Recommended. Prevents the same phone number spinning repeatedly
-                  in one day.
-                </span>
-              </span>
-            </label>
-            <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-600">
-              <span className="font-medium">Review link:</span>{" "}
-              {o.review_url ? (
-                <span className="break-all text-gray-500">{o.review_url}</span>
-              ) : (
-                <span className="text-amber-600">
-                  Not set — add a Google Place ID below.
-                </span>
-              )}
-            </div>
-            <button className="btn-primary">Save settings</button>
-          </form>
+          <CampaignSettingsForm campaign={c} reviewUrl={o.review_url} />
         </div>
       </div>
 
       {/* Branding & details */}
       <div className="card">
         <h2 className="mb-3 font-semibold">Branding & details</h2>
-        <form action={updateOutletBranding} className="grid gap-4 sm:grid-cols-2">
-          <input type="hidden" name="outlet_id" value={o.id} />
-          <div>
-            <label className="label" htmlFor="name">Outlet name</label>
-            <input id="name" name="name" defaultValue={o.name} className="input" />
-          </div>
-          <div>
-            <label className="label" htmlFor="address">Address</label>
-            <input id="address" name="address" defaultValue={o.address ?? ""} className="input" />
-          </div>
-          <div>
-            <label className="label" htmlFor="google_place_id">Google Place ID</label>
-            <input
-              id="google_place_id"
-              name="google_place_id"
-              defaultValue={o.google_place_id ?? ""}
-              className="input"
-              placeholder="ChIJ..."
-            />
-          </div>
-          <div>
-            <label className="label" htmlFor="review_url">Review URL (optional override)</label>
-            <input
-              id="review_url"
-              name="review_url"
-              defaultValue={o.review_url ?? ""}
-              className="input"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="label" htmlFor="logo_url">Logo image URL</label>
-            <input
-              id="logo_url"
-              name="logo_url"
-              defaultValue={o.logo_url ?? ""}
-              className="input"
-              placeholder="https://.../logo.png (square PNG works best)"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Used as the customer&apos;s home-screen wallet icon and on emails.
-              Paste a public square image URL.
-            </p>
-          </div>
-          <div>
-            <label className="label" htmlFor="brand_color">Brand color</label>
-            <input
-              id="brand_color"
-              name="brand_color"
-              type="color"
-              defaultValue={o.brand_color ?? "#e11d48"}
-              className="h-10 w-20 rounded border border-gray-300"
-            />
-          </div>
-          <div className="flex items-end">
-            <button className="btn-primary">Save details</button>
-          </div>
-        </form>
+        <OutletBrandingForm outlet={o} />
       </div>
 
       {/* Wheel / voucher editor */}
