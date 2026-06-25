@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SpinWheel, type WheelSeg } from "@/components/SpinWheel";
 
-type Step = "form" | "review" | "instagram" | "game" | "result";
+type Step = "form" | "social" | "game" | "result";
 
 interface DrawResult {
   prizeIndex: number;
@@ -76,7 +76,7 @@ export function CustomerFlow({
         if (typeof s.consent === "boolean") setConsent(s.consent);
         if (s.reviewClicked) setReviewClicked(true);
         if (s.instaClicked) setInstaClicked(true);
-        if (s.step && ["form", "review", "instagram", "game"].includes(s.step)) {
+        if (s.step && ["form", "social", "game"].includes(s.step)) {
           setStep(s.step);
         }
       }
@@ -98,44 +98,16 @@ export function CustomerFlow({
     }
   }, [STORAGE_KEY, step, phone, email, consent, reviewClicked, instaClicked]);
 
-  // Save synchronously right before navigating away to an external site,
-  // overriding the fields we're about to change.
-  function persistNow(extra: Record<string, unknown>) {
-    try {
-      sessionStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-          step,
-          phone,
-          email,
-          consent,
-          reviewClicked,
-          instaClicked,
-          ...extra,
-        })
-      );
-    } catch {
-      /* ignore */
-    }
-  }
-
-  // Tap "Review": advance our flow first, then go to Google in the same tab.
-  // When they return (any way), they're already on the next step.
   function goReview() {
     if (!reviewUrl) return;
-    const next: Step = instagramHandle ? "instagram" : "game";
     setReviewClicked(true);
-    setStep(next);
-    persistNow({ reviewClicked: true, step: next });
-    window.location.href = reviewUrl;
+    window.open(reviewUrl, "_blank", "noopener,noreferrer");
   }
 
   function goInstagram() {
     setInstaClicked(true);
-    setStep("game");
-    persistNow({ instaClicked: true, step: "game" });
     const handle = (instagramHandle ?? "").replace(/^@/, "");
-    window.location.href = `https://instagram.com/${handle}`;
+    window.open(`https://instagram.com/${handle}`, "_blank", "noopener,noreferrer");
   }
 
   function submitForm(e: React.FormEvent) {
@@ -153,7 +125,7 @@ export function CustomerFlow({
       setError("Please agree to continue.");
       return;
     }
-    setStep(reviewUrl ? "review" : instagramHandle ? "instagram" : "game");
+    setStep("social");
   }
 
   async function spin() {
@@ -289,58 +261,96 @@ export function CustomerFlow({
             </div>
           )}
 
-          {/* STEP: review (soft gate) */}
-          {step === "review" && (
-            <div className="card text-center">
-              <h1 className="text-xl font-extrabold">Love your visit? ⭐</h1>
+          {/* STEP: social (Google review + optional Instagram, combined) */}
+          {step === "social" && (
+            <div className="card">
+              <h1 className="text-xl font-extrabold">One step before you spin!</h1>
               <p className="mt-1 text-sm text-gray-600">
-                A quick Google review really helps {outletName} — it only takes a
-                moment.
+                Help us out — then spin for your reward.
               </p>
-              <button
-                onClick={goReview}
-                className="btn mt-4 w-full text-white"
-                style={accent}
-              >
-                ⭐ Leave a Google review
-              </button>
-              <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
-                After you post your review, <strong>return to this page</strong>{" "}
-                (swipe back or reopen your browser) — you&apos;ll be ready for the
-                next step automatically.
-              </p>
-              <button
-                onClick={() => setStep(instagramHandle ? "instagram" : "game")}
-                className="mt-3 w-full text-sm font-medium text-gray-500"
-              >
-                Skip for now
-              </button>
-            </div>
-          )}
+              <div className="mt-4 space-y-3">
+                {/* Google Review row — always shown */}
+                <button
+                  onClick={goReview}
+                  disabled={!reviewUrl}
+                  className="flex w-full items-center gap-3 rounded-xl border p-4 text-left transition hover:bg-gray-50 disabled:opacity-50"
+                  style={reviewClicked ? { borderColor: brandColor } : {}}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-white">
+                    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+                      <path fill="#4285F4" d="M45.5 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h12.1c-.5 2.8-2.1 5.1-4.4 6.7v5.5h7.1c4.2-3.8 6.7-9.5 6.7-15.9z"/>
+                      <path fill="#34A853" d="M24 46c6.1 0 11.2-2 14.9-5.5l-7.1-5.5c-2 1.3-4.5 2.1-7.8 2.1-6 0-11-4-12.8-9.4H3.9v5.7C7.6 41.1 15.3 46 24 46z"/>
+                      <path fill="#FBBC05" d="M11.2 27.7c-.5-1.3-.7-2.7-.7-4.2s.3-2.9.7-4.2v-5.7H3.9C2.4 16.4 1.5 20.1 1.5 24s.9 7.6 2.4 10.4l7.3-6.7z"/>
+                      <path fill="#EA4335" d="M24 10.5c3.4 0 6.4 1.2 8.8 3.4l6.5-6.5C35.2 3.8 30.1 1.5 24 1.5 15.3 1.5 7.6 6.4 3.9 13.6l7.3 5.7C13 14.5 18 10.5 24 10.5z"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold">Leave us a Google review</p>
+                    <p className="text-xs text-gray-500">
+                      {reviewUrl ? "Your feedback means the world to us" : "Review link not yet configured"}
+                    </p>
+                  </div>
+                  <div
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                    style={reviewClicked
+                      ? { background: "#dcfce7", border: "1px solid #86efac" }
+                      : { background: "#f3f4f6", border: "1px solid #e5e7eb" }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                      <path d="M2 6l3 3 5-5" stroke={reviewClicked ? "#16a34a" : "#9ca3af"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </button>
 
-          {/* STEP: instagram (optional) */}
-          {step === "instagram" && (
-            <div className="card text-center">
-              <h1 className="text-xl font-extrabold">Follow us on Instagram</h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Stay in the loop with offers and new dishes.
-              </p>
-              <button
-                onClick={goInstagram}
-                className="btn mt-4 w-full text-white"
-                style={accent}
-              >
-                Follow {instagramHandle}
-              </button>
-              <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
-                After following, <strong>return to this page</strong> — your spin
-                will be ready and waiting.
+                {/* Instagram row — only if configured */}
+                {instagramHandle && (
+                  <button
+                    onClick={goInstagram}
+                    className="flex w-full items-center gap-3 rounded-xl border p-4 text-left transition hover:bg-gray-50"
+                    style={instaClicked ? { borderColor: brandColor } : {}}
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-white">
+                      <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+                        <defs>
+                          <radialGradient id="ig-grad" cx="30%" cy="107%" r="150%">
+                            <stop offset="0%" stopColor="#fdf497"/>
+                            <stop offset="45%" stopColor="#fd5949"/>
+                            <stop offset="60%" stopColor="#d6249f"/>
+                            <stop offset="90%" stopColor="#285AEB"/>
+                          </radialGradient>
+                        </defs>
+                        <rect width="48" height="48" rx="12" fill="url(#ig-grad)"/>
+                        <rect x="13" y="13" width="22" height="22" rx="6" fill="none" stroke="#fff" strokeWidth="2.5"/>
+                        <circle cx="24" cy="24" r="5.5" fill="none" stroke="#fff" strokeWidth="2.5"/>
+                        <circle cx="34" cy="14" r="1.8" fill="#fff"/>
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold">Follow us on Instagram</p>
+                      <p className="text-xs text-gray-500">{instagramHandle}</p>
+                    </div>
+                    <div
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                      style={instaClicked
+                        ? { background: "#dcfce7", border: "1px solid #86efac" }
+                        : { background: "#f3f4f6", border: "1px solid #e5e7eb" }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                        <path d="M2 6l3 3 5-5" stroke={instaClicked ? "#16a34a" : "#9ca3af"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </button>
+                )}
+              </div>
+              <p className="mt-3 text-center text-xs text-gray-400">
+                These steps are optional — your reward is guaranteed either way.
               </p>
               <button
                 onClick={() => setStep("game")}
-                className="mt-3 w-full text-sm font-medium text-gray-500"
+                className="btn mt-4 w-full text-white"
+                style={accent}
               >
-                Skip for now
+                Spin the wheel
               </button>
             </div>
           )}
