@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Outlet } from "@/lib/types";
 import { OutletForm } from "./OutletForm";
+import { CopyConfigButton } from "./[id]/CopyConfigButton";
 
 export default async function OutletsPage() {
   const ctx = await requireAuth(["merchant"]);
@@ -33,34 +34,56 @@ export default async function OutletsPage() {
           <div className="card text-sm text-gray-500">No outlets yet.</div>
         ) : (
           <div className="space-y-3">
-            {list.map((o) => (
-              <div key={o.id} className="card flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="inline-block h-3 w-3 rounded-full"
-                      style={{ background: o.brand_color ?? "#e11d48" }}
+            {list.map((o, i) => (
+              <div key={o.id} className="card">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="inline-block h-3 w-3 rounded-full"
+                        style={{ background: o.brand_color ?? "#e11d48" }}
+                      />
+                      <span className="font-semibold">{o.name}</span>
+                      {i === 0 && list.length > 1 && (
+                        <span className="rounded bg-brand/10 px-1.5 py-0.5 text-xs font-medium text-brand">
+                          first outlet
+                        </span>
+                      )}
+                      {!o.is_active && (
+                        <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                          inactive
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 text-xs text-gray-500">
+                      {o.address || "No address"} ·{" "}
+                      {o.review_url ? "Review link set" : "No review link"}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <Link
+                      href={`/dashboard/outlets/${o.id}`}
+                      className="font-medium text-brand hover:underline"
+                    >
+                      Manage
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Copy the first outlet's setup to every other outlet. */}
+                {i === 0 && list.length > 1 && (
+                  <div className="mt-3 border-t border-gray-100 pt-3">
+                    <CopyConfigButton
+                      outletId={o.id}
+                      otherCount={list.length - 1}
                     />
-                    <span className="font-semibold">{o.name}</span>
-                    {!o.is_active && (
-                      <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
-                        inactive
-                      </span>
-                    )}
+                    <p className="mt-2 text-xs text-gray-500">
+                      Copies the spin wheel, campaign settings, and branding
+                      (logo &amp; colour). Each outlet keeps its own name,
+                      address, and Google review link.
+                    </p>
                   </div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    {o.address || "No address"} ·{" "}
-                    {o.review_url ? "Review link set" : "No review link"}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <Link
-                    href={`/dashboard/outlets/${o.id}`}
-                    className="font-medium text-brand hover:underline"
-                  >
-                    Manage
-                  </Link>
-                </div>
+                )}
               </div>
             ))}
           </div>
