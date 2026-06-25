@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { Campaign } from "@/lib/types";
 import { saveCampaignSettings, type SaveState } from "./actions";
 import { GameTypeField } from "./GameTypeField";
@@ -16,6 +16,13 @@ export function CampaignSettingsForm({
 }) {
   const [state, action, pending] = useActionState(saveCampaignSettings, initial);
 
+  // Controlled fields so React 19's automatic form-reset (which fires after the
+  // action completes) can't revert the user's choices back to defaults.
+  const [instagram, setInstagram] = useState(campaign.instagram_handle ?? "");
+  const [gameType, setGameType] = useState(campaign.game_type);
+  const [isActive, setIsActive] = useState(campaign.is_active);
+  const [limitOnePlay, setLimitOnePlay] = useState(campaign.limit_one_play_per_day);
+
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="campaign_id" value={campaign.id} />
@@ -26,7 +33,8 @@ export function CampaignSettingsForm({
         <input
           id="instagram_handle"
           name="instagram_handle"
-          defaultValue={campaign.instagram_handle ?? ""}
+          value={instagram}
+          onChange={(e) => setInstagram(e.target.value)}
           placeholder="@yourrestaurant"
           className="input"
         />
@@ -35,13 +43,14 @@ export function CampaignSettingsForm({
         </p>
       </div>
 
-      <GameTypeField value={campaign.game_type} />
+      <GameTypeField value={gameType} onChange={setGameType} />
 
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
           name="is_active"
-          defaultChecked={campaign.is_active}
+          checked={isActive}
+          onChange={(e) => setIsActive(e.target.checked)}
           className="h-4 w-4"
         />
         Campaign active (customers can play)
@@ -51,7 +60,8 @@ export function CampaignSettingsForm({
         <input
           type="checkbox"
           name="limit_one_play_per_day"
-          defaultChecked={campaign.limit_one_play_per_day}
+          checked={limitOnePlay}
+          onChange={(e) => setLimitOnePlay(e.target.checked)}
           className="mt-0.5 h-4 w-4"
         />
         <span>

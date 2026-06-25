@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { Outlet } from "@/lib/types";
 import { updateOutletBranding, type SaveState } from "./actions";
 
@@ -9,23 +9,44 @@ const initial: SaveState = {};
 export function OutletBrandingForm({ outlet }: { outlet: Outlet }) {
   const [state, action, pending] = useActionState(updateOutletBranding, initial);
 
+  // Controlled so React 19's post-action form-reset can't wipe the inputs.
+  const [name, setName] = useState(outlet.name);
+  const [address, setAddress] = useState(outlet.address ?? "");
+  const [placeId, setPlaceId] = useState(outlet.google_place_id ?? "");
+  const [reviewUrl, setReviewUrl] = useState(outlet.review_url ?? "");
+  const [logoUrl, setLogoUrl] = useState(outlet.logo_url ?? "");
+  const [brandColor, setBrandColor] = useState(outlet.brand_color ?? "#e11d48");
+
   return (
     <form action={action} className="grid gap-4 sm:grid-cols-2">
       <input type="hidden" name="outlet_id" value={outlet.id} />
       <div>
         <label className="label" htmlFor="name">Outlet name</label>
-        <input id="name" name="name" defaultValue={outlet.name} className="input" />
+        <input
+          id="name"
+          name="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="input"
+        />
       </div>
       <div>
         <label className="label" htmlFor="address">Address</label>
-        <input id="address" name="address" defaultValue={outlet.address ?? ""} className="input" />
+        <input
+          id="address"
+          name="address"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          className="input"
+        />
       </div>
       <div>
         <label className="label" htmlFor="google_place_id">Google Place ID</label>
         <input
           id="google_place_id"
           name="google_place_id"
-          defaultValue={outlet.google_place_id ?? ""}
+          value={placeId}
+          onChange={(e) => setPlaceId(e.target.value)}
           className="input"
           placeholder="ChIJ..."
         />
@@ -35,7 +56,8 @@ export function OutletBrandingForm({ outlet }: { outlet: Outlet }) {
         <input
           id="review_url"
           name="review_url"
-          defaultValue={outlet.review_url ?? ""}
+          value={reviewUrl}
+          onChange={(e) => setReviewUrl(e.target.value)}
           className="input"
         />
       </div>
@@ -44,7 +66,8 @@ export function OutletBrandingForm({ outlet }: { outlet: Outlet }) {
         <input
           id="logo_url"
           name="logo_url"
-          defaultValue={outlet.logo_url ?? ""}
+          value={logoUrl}
+          onChange={(e) => setLogoUrl(e.target.value)}
           className="input"
           placeholder="https://.../logo.png (square PNG works best)"
         />
@@ -59,7 +82,8 @@ export function OutletBrandingForm({ outlet }: { outlet: Outlet }) {
           id="brand_color"
           name="brand_color"
           type="color"
-          defaultValue={outlet.brand_color ?? "#e11d48"}
+          value={brandColor}
+          onChange={(e) => setBrandColor(e.target.value)}
           className="h-10 w-20 rounded border border-gray-300"
         />
       </div>

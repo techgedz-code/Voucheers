@@ -1,12 +1,20 @@
+"use client";
+
 import { GAME_TYPE_LABELS } from "@/lib/constants";
 import type { GameType } from "@/lib/types";
 
 /**
- * Game picker for campaign settings. The chosen game only changes what the
- * customer sees — prizes (voucher types) and win weights are shared across
- * games and configured once below.
+ * Controlled game picker for campaign settings. The chosen game only changes
+ * what the customer sees — prizes (voucher types) and win weights are shared
+ * across games and configured once below.
  */
-export function GameTypeField({ value }: { value: GameType }) {
+export function GameTypeField({
+  value,
+  onChange,
+}: {
+  value: GameType;
+  onChange: (v: GameType) => void;
+}) {
   return (
     <div>
       <label className="label" htmlFor="game_type">
@@ -15,7 +23,8 @@ export function GameTypeField({ value }: { value: GameType }) {
       <select
         id="game_type"
         name="game_type"
-        defaultValue={value}
+        value={value}
+        onChange={(e) => onChange(e.target.value as GameType)}
         className="input"
       >
         {(Object.keys(GAME_TYPE_LABELS) as GameType[]).map((g) => (
@@ -25,8 +34,11 @@ export function GameTypeField({ value }: { value: GameType }) {
         ))}
       </select>
       <p className="mt-1 text-xs text-gray-500">
-        The game the customer plays to win. Prizes and win odds below are shared
-        across all games.
+        Customers will play:{" "}
+        <span className="font-medium text-gray-700">
+          {GAME_TYPE_LABELS[value]}
+        </span>
+        . Prizes and win odds below are shared across all games.
       </p>
     </div>
   );
