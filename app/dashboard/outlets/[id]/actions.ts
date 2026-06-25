@@ -2,13 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAuth } from "@/lib/auth";
 import type { RewardType } from "@/lib/types";
 import { googleReviewUrl } from "@/lib/constants";
 
+async function getSupabase(role: string) {
+  return role === "super_admin" ? createAdminClient() : await createClient();
+}
+
 export async function updateOutletBranding(formData: FormData) {
-  await requireAuth(["merchant"]);
-  const supabase = await createClient();
+  const ctx = await requireAuth(["merchant", "super_admin"]);
+  const supabase = await getSupabase(ctx.profile.role);
 
   const id = String(formData.get("outlet_id"));
   const name = String(formData.get("name") || "").trim();
@@ -33,6 +38,7 @@ export async function updateOutletBranding(formData: FormData) {
     .eq("id", id);
 
   revalidatePath(`/dashboard/outlets/${id}`);
+  revalidatePath(`/admin/merchants`);
 }
 
 /** Editable shape sent from the wheel editor (subset of VoucherType). */
@@ -51,8 +57,8 @@ export interface SegmentInput {
 }
 
 export async function saveCampaignSettings(formData: FormData) {
-  await requireAuth(["merchant"]);
-  const supabase = await createClient();
+  const ctx = await requireAuth(["merchant", "super_admin"]);
+  const supabase = await getSupabase(ctx.profile.role);
   const campaignId = String(formData.get("campaign_id"));
   const instagram = String(formData.get("instagram_handle") || "").trim();
   const isActive = String(formData.get("is_active")) === "on";
@@ -68,6 +74,7 @@ export async function saveCampaignSettings(formData: FormData) {
     .eq("id", campaignId);
 
   revalidatePath(`/dashboard/outlets`);
+  revalidatePath(`/admin/merchants`);
 }
 
 export type SaveSegmentsState = { error?: string; ok?: boolean };
@@ -76,8 +83,8 @@ export async function saveVoucherTypes(
   _prev: SaveSegmentsState,
   formData: FormData
 ): Promise<SaveSegmentsState> {
-  await requireAuth(["merchant"]);
-  const supabase = await createClient();
+  const ctx = await requireAuth(["merchant", "super_admin"]);
+  const supabase = await getSupabase(ctx.profile.role);
 
   const campaignId = String(formData.get("campaign_id"));
   let segments: SegmentInput[];
@@ -102,7 +109,7 @@ export async function saveVoucherTypes(
     if (s.win_weight < 0) return { error: "Weights cannot be negative." };
   }
 
-  // Verify the campaign belongs to the current merchant (RLS also enforces this).
+  // Verify the campaign exists.
   const { data: campaign } = await supabase
     .from("campaigns")
     .select("id")
@@ -112,7 +119,7 @@ export async function saveVoucherTypes(
 
   const keepIds = segments.filter((s) => s.id).map((s) => s.id as string);
 
-  // Soft-delete segments the merchant removed (keeps issued vouchers valid).
+  // Soft-delete segments that were removed (keeps issued vouchers valid).
   const delQuery = supabase
     .from("voucher_types")
     .update({ is_active: false })
@@ -147,5 +154,6 @@ export async function saveVoucherTypes(
   }
 
   revalidatePath(`/dashboard/outlets`);
+  revalidatePath(`/admin/merchants`);
   return { ok: true };
 }

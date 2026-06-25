@@ -13,7 +13,7 @@ export async function createStaff(
   _prev: StaffActionState,
   formData: FormData
 ): Promise<StaffActionState> {
-  const ctx = await requireAuth(["merchant"]);
+  const ctx = await requireAuth(["merchant", "super_admin"]);
   const admin = createAdminClient();
 
   const name = String(formData.get("full_name") || "").trim();
@@ -23,7 +23,12 @@ export async function createStaff(
   if (!email) return { error: "Email is required." };
   if (password.length < 8) return { error: "Password must be at least 8 characters." };
 
-  const merchantId = ctx.merchant?.id;
+  // Super admin passes merchant_id via hidden form field; merchant uses their own id.
+  const merchantId =
+    ctx.profile.role === "super_admin"
+      ? String(formData.get("merchant_id") || "").trim()
+      : ctx.merchant?.id;
+
   if (!merchantId) return { error: "Merchant account not found." };
 
   const { data, error } = await admin.auth.admin.createUser({
@@ -53,6 +58,7 @@ export async function createStaff(
   }
 
   revalidatePath("/dashboard/staff");
+  revalidatePath("/admin/merchants");
   return { ok: true };
 }
 
@@ -60,7 +66,7 @@ export async function removeStaff(
   _prev: StaffActionState,
   formData: FormData
 ): Promise<StaffActionState> {
-  await requireAuth(["merchant"]);
+  await requireAuth(["merchant", "super_admin"]);
   const admin = createAdminClient();
 
   const userId = String(formData.get("user_id") || "").trim();
@@ -70,5 +76,6 @@ export async function removeStaff(
   if (error) return { error: error.message };
 
   revalidatePath("/dashboard/staff");
+  revalidatePath("/admin/merchants");
   return { ok: true };
 }

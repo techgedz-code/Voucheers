@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Merchant } from "@/lib/types";
@@ -53,6 +54,12 @@ export default async function AdminHome() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/admin/merchants/${m.id}`}
+                  className="btn-outline !py-1.5"
+                >
+                  Manage
+                </Link>
                 {m.subscription_status === "pending" ? (
                   <form action={approveMerchant} className="flex items-end gap-2">
                     <input type="hidden" name="merchant_id" value={m.id} />

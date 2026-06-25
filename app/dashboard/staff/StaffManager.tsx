@@ -12,7 +12,13 @@ interface StaffMember {
 
 const initial: StaffActionState = {};
 
-export function StaffManager({ staff }: { staff: StaffMember[] }) {
+export function StaffManager({
+  staff,
+  merchantId,
+}: {
+  staff: StaffMember[];
+  merchantId?: string;
+}) {
   const [createState, createAction, creating] = useActionState(createStaff, initial);
   const [removeState, removeAction, removing] = useActionState(removeStaff, initial);
 
@@ -76,6 +82,9 @@ export function StaffManager({ staff }: { staff: StaffMember[] }) {
           with them directly — they log in at the normal login page.
         </p>
         <form action={createAction} className="space-y-3">
+          {merchantId && (
+            <input type="hidden" name="merchant_id" value={merchantId} />
+          )}
           <div>
             <label className="label" htmlFor="full_name">Name</label>
             <input
