@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { sendResetEmail } from "./actions";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export default async function ForgotPasswordPage({
   searchParams,
@@ -35,9 +36,9 @@ export default async function ForgotPasswordPage({
                 <label className="label" htmlFor="email">Email</label>
                 <input id="email" name="email" type="email" required className="input" />
               </div>
-              <button type="submit" className="btn-primary w-full">
+              <SubmitButton className="btn-primary w-full" pendingText="Sending…">
                 Send reset link
-              </button>
+              </SubmitButton>
             </form>
           </>
         )}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { login } from "./actions";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export default async function LoginPage({
   searchParams,
@@ -40,7 +41,7 @@ export default async function LoginPage({
             <label className="label" htmlFor="password">Password</label>
             <input id="password" name="password" type="password" required className="input" />
           </div>
-          <button type="submit" className="btn-primary w-full">Sign in</button>
+          <SubmitButton className="btn-primary w-full" pendingText="Signing in…">Sign in</SubmitButton>
           <div className="text-right">
             <Link href="/forgot-password" className="text-sm text-gray-500 hover:text-brand">
               Forgot password?

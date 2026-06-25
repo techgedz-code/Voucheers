@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signup } from "../login/actions";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export default async function SignupPage({
   searchParams,
@@ -43,7 +44,7 @@ export default async function SignupPage({
             <label className="label" htmlFor="password">Password</label>
             <input id="password" name="password" type="password" minLength={6} required className="input" />
           </div>
-          <button type="submit" className="btn-primary w-full">Create account</button>
+          <SubmitButton className="btn-primary w-full" pendingText="Creating account…">Create account</SubmitButton>
         </form>
       </div>
 

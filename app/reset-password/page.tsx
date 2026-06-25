@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { updatePassword } from "./actions";
+import { SubmitButton } from "@/components/SubmitButton";
 
 export default async function ResetPasswordPage({
   searchParams,
@@ -66,9 +67,9 @@ export default async function ResetPasswordPage({
                   className="input"
                 />
               </div>
-              <button type="submit" className="btn-primary w-full">
+              <SubmitButton className="btn-primary w-full" pendingText="Updating…">
                 Update password
-              </button>
+              </SubmitButton>
             </form>
           </>
         )}
