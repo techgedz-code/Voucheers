@@ -5,7 +5,7 @@ export type UserRole = "super_admin" | "merchant" | "staff";
 
 export type SubscriptionStatus = "pending" | "active" | "suspended" | "cancelled";
 
-export type GameType = "spin_wheel";
+export type GameType = "spin_wheel" | "football";
 
 export type RewardType =
   | "bogo" // buy one get one

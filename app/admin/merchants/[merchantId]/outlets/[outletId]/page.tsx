@@ -7,6 +7,7 @@ import { qrPngDataUrl } from "@/lib/qr";
 import type { Campaign, Outlet, VoucherType } from "@/lib/types";
 import { VoucherWheelEditor } from "@/app/dashboard/outlets/[id]/VoucherWheelEditor";
 import { CopyConfigButton } from "@/app/dashboard/outlets/[id]/CopyConfigButton";
+import { GameTypeField } from "@/app/dashboard/outlets/[id]/GameTypeField";
 import {
   saveCampaignSettings,
   updateOutletBranding,
@@ -113,6 +114,7 @@ export default async function AdminOutletPage({
                 Shown as an optional "Follow us" step before the game.
               </p>
             </div>
+            <GameTypeField value={c.game_type} />
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"

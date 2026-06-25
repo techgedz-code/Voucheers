@@ -7,6 +7,7 @@ import { qrPngDataUrl } from "@/lib/qr";
 import type { Campaign, Outlet, VoucherType } from "@/lib/types";
 import { VoucherWheelEditor } from "./VoucherWheelEditor";
 import { CopyConfigButton } from "./CopyConfigButton";
+import { GameTypeField } from "./GameTypeField";
 import { saveCampaignSettings, updateOutletBranding } from "./actions";
 
 export default async function OutletDetail({
@@ -103,6 +104,7 @@ export default async function OutletDetail({
                 Shown as an optional “Follow us” step before the game.
               </p>
             </div>
+            <GameTypeField value={c.game_type} />
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"

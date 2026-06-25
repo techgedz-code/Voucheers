@@ -1,4 +1,4 @@
-import type { RewardType } from "./types";
+import type { GameType, RewardType } from "./types";
 
 export const APP_NAME = "Voucheers";
 
@@ -8,6 +8,12 @@ export function appUrl(): string {
     "http://localhost:3000"
   );
 }
+
+/** Customer-facing games the merchant can pick per campaign. */
+export const GAME_TYPE_LABELS: Record<GameType, string> = {
+  spin_wheel: "Spin the Wheel",
+  football: "Football — Kick It!",
+};
 
 export const REWARD_TYPE_LABELS: Record<RewardType, string> = {
   bogo: "Buy 1 Get 1",

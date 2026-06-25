@@ -21,8 +21,11 @@ A step-by-step guide to run the platform locally. No prior coding needed — jus
 
 1. In Supabase, open **SQL Editor** → **New query**.
 2. Run **each** file in [`supabase/migrations/`](supabase/migrations) **in order**, one at a time:
-   `0001_init.sql`, then `0002_voucher_active.sql`, then `0003_functions.sql`.
+   `0001_init.sql`, `0002_voucher_active.sql`, `0003_functions.sql`,
+   `0004_abuse.sql`, `0005_campaign_play_limit.sql`, then
+   `0006_game_type_football.sql`.
    For each: open the file, copy all of it, paste into the editor, click **Run**.
+   (`0006` adds the "football" game option — run it before using that game.)
 3. You should see "Success" each time. These create all tables, security rules,
    triggers, and the draw/redemption functions.
 

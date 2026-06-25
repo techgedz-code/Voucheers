@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SpinWheel, type WheelSeg } from "@/components/SpinWheel";
+import { FootballGame } from "@/components/FootballGame";
+import type { GameType } from "@/lib/types";
 
 type Step = "form" | "social" | "game" | "result";
 
@@ -29,6 +31,7 @@ export function CustomerFlow({
   reviewUrl,
   instagramHandle,
   segments,
+  gameType,
 }: {
   qrToken: string;
   outletName: string;
@@ -37,6 +40,7 @@ export function CustomerFlow({
   reviewUrl: string | null;
   instagramHandle: string | null;
   segments: WheelSeg[];
+  gameType: GameType;
 }) {
   const [step, setStep] = useState<Step>("form");
   const [phone, setPhone] = useState("");
@@ -50,6 +54,8 @@ export function CustomerFlow({
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<DrawResult | null>(null);
+  const [footballPlaying, setFootballPlaying] = useState(false);
+  const [footballScore, setFootballScore] = useState<number | null>(null);
 
   const n = segments.length;
   const slice = 360 / n;
@@ -128,9 +134,9 @@ export function CustomerFlow({
     setStep("social");
   }
 
-  async function spin() {
-    if (loading || spinning) return;
-    setLoading(true);
+  // Shared, server-authoritative prize draw. Both games call this; the game is
+  // only cosmetic and never decides the prize.
+  async function drawPrize(): Promise<DrawResult | null> {
     setError(null);
     try {
       const res = await fetch("/api/draw", {
@@ -148,28 +154,61 @@ export function CustomerFlow({
       const data = (await res.json()) as DrawResult & { error?: string };
       if (!res.ok) {
         setError(data.error || "Something went wrong. Please try again.");
-        setLoading(false);
-        return;
+        return null;
       }
-      // Animate so the winning segment lands under the top pointer.
-      const target = data.prizeIndex;
-      const center = target * slice + slice / 2;
-      const finalRotation = 360 * 5 - center;
       setResult(data);
-      setSpinning(true);
-      setLoading(false);
-      // next tick so transition applies
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => setRotation(finalRotation))
-      );
+      return data;
     } catch {
       setError("Network error. Please try again.");
-      setLoading(false);
+      return null;
     }
+  }
+
+  async function spin() {
+    if (loading || spinning) return;
+    setLoading(true);
+    const data = await drawPrize();
+    if (!data) {
+      setLoading(false);
+      return;
+    }
+    // Animate so the winning segment lands under the top pointer.
+    const target = data.prizeIndex;
+    const center = target * slice + slice / 2;
+    const finalRotation = 360 * 5 - center;
+    setSpinning(true);
+    setLoading(false);
+    // next tick so transition applies
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => setRotation(finalRotation))
+    );
   }
 
   function onSpinEnd() {
     setSpinning(false);
+    setStep("result");
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function playFootball() {
+    if (loading || footballPlaying) return;
+    setLoading(true);
+    const data = await drawPrize();
+    if (!data) {
+      setLoading(false);
+      return;
+    }
+    // Prize is decided; the 30-second game runs purely for fun.
+    setFootballPlaying(true);
+    setLoading(false);
+  }
+
+  function handleFootballClaim(score: number) {
+    setFootballScore(score);
     setStep("result");
     try {
       sessionStorage.removeItem(STORAGE_KEY);
@@ -350,13 +389,13 @@ export function CustomerFlow({
                 className="btn mt-4 w-full text-white"
                 style={accent}
               >
-                Spin the wheel
+                {gameType === "football" ? "Play & win" : "Spin the wheel"}
               </button>
             </div>
           )}
 
-          {/* STEP: game */}
-          {step === "game" && (
+          {/* STEP: game — spin wheel */}
+          {step === "game" && gameType === "spin_wheel" && (
             <div className="card text-center">
               <h1 className="text-xl font-extrabold">Spin to win! 🎉</h1>
               <p className="mt-1 text-sm text-gray-600">Tap the button to spin.</p>
@@ -380,9 +419,38 @@ export function CustomerFlow({
             </div>
           )}
 
+          {/* STEP: game — football */}
+          {step === "game" && gameType === "football" && (
+            footballPlaying ? (
+              <FootballGame brandColor={brandColor} onClaim={handleFootballClaim} />
+            ) : (
+              <div className="card text-center">
+                <h1 className="text-xl font-extrabold">Kick It! ⚽</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Score as many goals as you can in 30 seconds — then claim your
+                  reward! 🎁
+                </p>
+                <div className="my-6 text-6xl">⚽</div>
+                <button
+                  onClick={playFootball}
+                  disabled={loading}
+                  className="btn w-full text-white"
+                  style={accent}
+                >
+                  {loading ? "Preparing…" : "Play"}
+                </button>
+              </div>
+            )
+          )}
+
           {/* STEP: result */}
           {step === "result" && result && (
             <div className="card text-center">
+              {gameType === "football" && footballScore !== null && (
+                <div className="mb-3 rounded-lg bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700">
+                  ⚽ You scored {footballScore} points!
+                </div>
+              )}
               {result.won && result.voucher ? (
                 <>
                   <div className="text-4xl">🎉</div>

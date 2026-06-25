@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAuth } from "@/lib/auth";
-import type { RewardType } from "@/lib/types";
+import type { GameType, RewardType } from "@/lib/types";
 import { googleReviewUrl } from "@/lib/constants";
 
 async function getSupabase(role: string) {
@@ -63,6 +63,9 @@ export async function saveCampaignSettings(formData: FormData) {
   const instagram = String(formData.get("instagram_handle") || "").trim();
   const isActive = String(formData.get("is_active")) === "on";
   const limitOnePlay = String(formData.get("limit_one_play_per_day")) === "on";
+  const gameTypeRaw = String(formData.get("game_type") || "spin_wheel");
+  const gameType: GameType =
+    gameTypeRaw === "football" ? "football" : "spin_wheel";
 
   await supabase
     .from("campaigns")
@@ -70,6 +73,7 @@ export async function saveCampaignSettings(formData: FormData) {
       instagram_handle: instagram || null,
       is_active: isActive,
       limit_one_play_per_day: limitOnePlay,
+      game_type: gameType,
     })
     .eq("id", campaignId);
 

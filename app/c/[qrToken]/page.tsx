@@ -93,6 +93,7 @@ export default async function CustomerLanding({
       reviewUrl={outlet.review_url}
       instagramHandle={campaign.instagram_handle}
       segments={segments}
+      gameType={campaign.game_type}
     />
   );
 }
