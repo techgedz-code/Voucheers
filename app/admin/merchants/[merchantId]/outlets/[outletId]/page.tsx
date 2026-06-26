@@ -6,7 +6,6 @@ import { appUrl } from "@/lib/constants";
 import { qrPngDataUrl } from "@/lib/qr";
 import type { Campaign, Outlet, VoucherType } from "@/lib/types";
 import { VoucherWheelEditor } from "@/app/dashboard/outlets/[id]/VoucherWheelEditor";
-import { CopyConfigButton } from "@/app/dashboard/outlets/[id]/CopyConfigButton";
 import { CampaignSettingsForm } from "@/app/dashboard/outlets/[id]/CampaignSettingsForm";
 import { OutletBrandingForm } from "@/app/dashboard/outlets/[id]/OutletBrandingForm";
 
@@ -50,13 +49,6 @@ export default async function AdminOutletPage({
     .eq("campaign_id", c.id)
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
-
-  // Count sibling outlets so we can offer "copy this setup to all others".
-  const { count: outletCount } = await admin
-    .from("outlets")
-    .select("id", { count: "exact", head: true })
-    .eq("merchant_id", merchantId);
-  const otherOutlets = Math.max(0, (outletCount ?? 1) - 1);
 
   const scanUrl = `${appUrl()}/c/${o.qr_token}`;
   const qrImg = await qrPngDataUrl(scanUrl, {
@@ -115,20 +107,6 @@ export default async function AdminOutletPage({
           initial={(vtypes ?? []) as VoucherType[]}
         />
       </div>
-
-      {/* Copy this setup to other outlets */}
-      {otherOutlets > 0 && (
-        <div className="card">
-          <h2 className="mb-1 font-semibold">Apply to other outlets</h2>
-          <p className="mb-4 text-sm text-gray-500">
-            Copy this outlet&apos;s spin wheel, campaign settings, and branding
-            (logo &amp; colour) to all this merchant&apos;s other outlets in one
-            click. Each outlet keeps its own name, address, and Google review
-            link.
-          </p>
-          <CopyConfigButton outletId={o.id} otherCount={otherOutlets} />
-        </div>
-      )}
     </div>
   );
 }

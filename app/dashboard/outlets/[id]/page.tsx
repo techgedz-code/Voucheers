@@ -6,7 +6,6 @@ import { appUrl } from "@/lib/constants";
 import { qrPngDataUrl } from "@/lib/qr";
 import type { Campaign, Outlet, VoucherType } from "@/lib/types";
 import { VoucherWheelEditor } from "./VoucherWheelEditor";
-import { CopyConfigButton } from "./CopyConfigButton";
 import { CampaignSettingsForm } from "./CampaignSettingsForm";
 import { OutletBrandingForm } from "./OutletBrandingForm";
 
@@ -49,12 +48,6 @@ export default async function OutletDetail({
     .eq("campaign_id", c.id)
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
-
-  // Count sibling outlets so we can offer "copy this setup to all others".
-  const { count: outletCount } = await supabase
-    .from("outlets")
-    .select("id", { count: "exact", head: true });
-  const otherOutlets = Math.max(0, (outletCount ?? 1) - 1);
 
   const scanUrl = `${appUrl()}/c/${o.qr_token}`;
   const qrImg = await qrPngDataUrl(scanUrl, { width: 220, dark: o.brand_color ?? "#111827" });
@@ -108,19 +101,6 @@ export default async function OutletDetail({
           initial={(vtypes ?? []) as VoucherType[]}
         />
       </div>
-
-      {/* Copy this setup to other outlets */}
-      {otherOutlets > 0 && (
-        <div className="card">
-          <h2 className="mb-1 font-semibold">Apply to other outlets</h2>
-          <p className="mb-4 text-sm text-gray-500">
-            Copy this outlet&apos;s spin wheel, campaign settings, and branding
-            (logo &amp; colour) to all your other outlets in one click. Each
-            outlet keeps its own name, address, and Google review link.
-          </p>
-          <CopyConfigButton outletId={o.id} otherCount={otherOutlets} />
-        </div>
-      )}
     </div>
   );
 }
