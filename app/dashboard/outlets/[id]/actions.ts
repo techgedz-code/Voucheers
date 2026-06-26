@@ -271,6 +271,7 @@ export async function copyConfigToAllOutlets(
           instagram_handle: srcCampaign.instagram_handle,
           is_active: srcCampaign.is_active,
           limit_one_play_per_day: srcCampaign.limit_one_play_per_day,
+          game_type: srcCampaign.game_type,
         })
         .eq("id", tCampaign.id);
     }
