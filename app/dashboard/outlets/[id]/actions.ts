@@ -265,7 +265,7 @@ export async function copyConfigToAllOutlets(
 
     // 3. Campaign settings.
     if (srcCampaign) {
-      await supabase
+      const { error: campErr } = await supabase
         .from("campaigns")
         .update({
           instagram_handle: srcCampaign.instagram_handle,
@@ -274,6 +274,7 @@ export async function copyConfigToAllOutlets(
           game_type: srcCampaign.game_type,
         })
         .eq("id", tCampaign.id);
+      if (campErr) return { error: `Could not copy campaign settings: ${campErr.message}` };
     }
 
     // 4. Spin wheel: soft-delete the target's current prizes (keeps already
@@ -302,7 +303,8 @@ export async function copyConfigToAllOutlets(
     }
   }
 
-  revalidatePath(`/dashboard/outlets`);
-  revalidatePath(`/admin/merchants`);
+  // Revalidate list AND detail pages so every copied-to outlet shows its new
+  // game/settings instead of a stale cached version.
+  revalidateOutletPages();
   return { ok: true, count: targetOutlets.length };
 }
